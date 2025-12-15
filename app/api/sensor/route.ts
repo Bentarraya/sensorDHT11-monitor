@@ -41,18 +41,4 @@ export async function POST(req: Request) {
 
 export async function GET() {
   return NextResponse.json({ readings });
-}ding);
-
-    return NextResponse.json({ success: true, reading }, { status: 201 });
-
-  } catch (err) {
-    return NextResponse.json(
-      { error: "Invalid JSON" },
-      { status: 400 }
-    );
-  }
-}
-
-export async function GET() {
-  return NextResponse.json({ readings });
 }
