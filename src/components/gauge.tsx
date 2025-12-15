@@ -45,7 +45,7 @@ const Gauge: React.FC<GaugeProps> = ({ value, maxValue, unit }) => {
             y="50"
             textAnchor="middle"
             dominantBaseline="text-bottom"
-            className="fill-foreground text-xl font-bold font-mono"
+            className="fill-foreground text-lg font-medium font-mono"
           >
             {safeValue.toFixed(1)}
              <tspan dy="-0.2em" className="text-base font-medium">{unit}</tspan>
