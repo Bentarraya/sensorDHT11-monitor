@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // ====== GOOGLE AUTH ======
+    // GOOGLE AUTH
     const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
@@ -29,29 +29,28 @@ export async function POST(req: Request) {
     const spreadsheetId = process.env.GOOGLE_SHEET_ID!;
     const sheetName = cycleDate;
 
-    // ====== CHECK & CREATE SHEET IF NOT EXISTS ======
+    // CHECK IF SHEET EXISTS
     const info = await sheets.spreadsheets.get({ spreadsheetId });
-    const exists = info.data.sheets?.some(
+    const sheetExists = info.data.sheets?.some(
       (s) => s.properties?.title === sheetName
     );
 
-    if (!exists) {
+    // ADD SHEET IF NOT EXISTS
+    if (!sheetExists) {
       await sheets.spreadsheets.batchUpdate({
         spreadsheetId,
         requestBody: {
           requests: [
             {
               addSheet: {
-                properties: {
-                  title: sheetName,
-                },
+                properties: { title: sheetName },
               },
             },
           ],
         },
       });
 
-      // Add header row
+      // HEADER
       await sheets.spreadsheets.values.update({
         spreadsheetId,
         range: `${sheetName}!A1`,
@@ -64,7 +63,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // ====== FORMAT DATA ROWS ======
+    // FORMAT DATA ROWS
     const rows = readings.map((r: any, i: number) => [
       r.timestamp,
       r.temperature,
@@ -72,7 +71,7 @@ export async function POST(req: Request) {
       i === 0 ? summary || "" : "",
     ]);
 
-    // ====== INSERT ROWS ======
+    // INSERT ROWS
     await sheets.spreadsheets.values.append({
       spreadsheetId,
       range: `${sheetName}!A1`,
