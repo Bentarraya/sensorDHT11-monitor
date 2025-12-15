@@ -1,40 +1,51 @@
-import { NextResponse } from 'next/server';
-import type { SensorReading } from '@/lib/types';
-import { google } from 'googleapis';
+import { NextResponse } from "next/server";
 
-// In-memory store for demonstration purposes.
-let sensorReadings: SensorReading[] = [];
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
-const MAX_READINGS = 24; // Corresponds to a 24-hour cycle if data is sent hourly.
+interface SensorReading {
+  deviceId: string;
+  temperature: number;
+  humidity: number;
+  timestamp: string;
+}
 
-async function sendDailyReportToGoogleSheets(data: SensorReading[]) {
+// In-memory (Vercel ephemeral, only for testing)
+let readings: SensorReading[] = [];
+
+export async function POST(req: Request) {
   try {
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      },
-      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    });
+    const body = await req.json();
+    const { deviceId, temperature, humidity } = body;
 
-    const sheets = google.sheets({ version: 'v4', auth });
+    if (!deviceId)
+      return NextResponse.json({ error: "Missing deviceId" }, { status: 400 });
+    if (typeof temperature !== "number")
+      return NextResponse.json({ error: "Invalid temperature" }, { status: 400 });
+    if (typeof humidity !== "number")
+      return NextResponse.json({ error: "Invalid humidity" }, { status: 400 });
 
-    const spreadsheetId = process.env.GOOGLE_SHEET_ID;
-    const sheetName = "Daily Sensor Data"; // You can change this or make it dynamic
+    const newReading: SensorReading = {
+      deviceId,
+      temperature: parseFloat(temperature.toFixed(1)),
+      humidity: parseFloat(humidity.toFixed(1)),
+      timestamp: new Date().toISOString(),
+    };
 
-    // Prepare header row if the sheet is new or empty
-    const header = ['Timestamp', 'Temperature (°C)', 'Humidity (%)'];
-    
-    // Prepare data rows
-    const rows = data.map(reading => [
-      reading.timestamp,
-      reading.temperature,
-      reading.humidity,
-    ]);
+    readings.push(newReading);
 
-    // Check if sheet exists, create if not
-    const spreadsheetInfo = await sheets.spreadsheets.get({ spreadsheetId });
-    const sheetExists = spreadsheetInfo.data.sheets?.some(s => s.properties?.title === sheetName);
+    return NextResponse.json(
+      { success: true, reading: newReading },
+      { status: 201 }
+    );
+  } catch (err) {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+}
+
+export async function GET() {
+  return NextResponse.json({ count: readings.length, readings });
+}e === sheetName);
 
     if (!sheetExists) {
       await sheets.spreadsheets.batchUpdate({
