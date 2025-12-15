@@ -42,21 +42,13 @@ const Gauge: React.FC<GaugeProps> = ({ value, maxValue, unit }) => {
           />
           <text
             x="60"
-            y="50"
+            y="48"
             textAnchor="middle"
-            dominantBaseline="middle"
+            dominantBaseline="text-bottom"
             className="fill-foreground text-3xl font-bold font-mono"
           >
             {safeValue.toFixed(1)}
-          </text>
-          <text
-            x="60"
-            y="62"
-            textAnchor="middle"
-            dominantBaseline="middle"
-            className="fill-muted-foreground text-sm"
-          >
-            {unit}
+             <tspan dy="-0.2em" className="text-xl font-medium">{unit}</tspan>
           </text>
         </svg>
       </div>
