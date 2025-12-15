@@ -1,22 +1,82 @@
 import { NextResponse } from 'next/server';
 import type { SensorReading } from '@/lib/types';
+import { google } from 'googleapis';
 
 // In-memory store for demonstration purposes.
-// In a real application, you would use a database.
 let sensorReadings: SensorReading[] = [];
 
 const MAX_READINGS = 24; // Corresponds to a 24-hour cycle if data is sent hourly.
 
-// The "daily report" function is complex and requires external service integration (Google Sheets API) and secure auth.
-// This is a placeholder for where that logic would be triggered.
 async function sendDailyReportToGoogleSheets(data: SensorReading[]) {
-  console.log('Simulating: Sending daily report to Google Sheets...');
-  // In a real implementation, you would:
-  // 1. Authenticate with Google Sheets API (e.g., using OAuth2 or a service account).
-  // 2. Format the data as needed for the sheet.
-  // 3. Make an API call to append/update the spreadsheet.
-  console.log(`Simulating: Sent ${data.length} records.`);
-  console.log('Simulating: Report sent.');
+  try {
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      },
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+    const sheetName = "Daily Sensor Data"; // You can change this or make it dynamic
+
+    // Prepare header row if the sheet is new or empty
+    const header = ['Timestamp', 'Temperature (°C)', 'Humidity (%)'];
+    
+    // Prepare data rows
+    const rows = data.map(reading => [
+      reading.timestamp,
+      reading.temperature,
+      reading.humidity,
+    ]);
+
+    // Check if sheet exists, create if not
+    const spreadsheetInfo = await sheets.spreadsheets.get({ spreadsheetId });
+    const sheetExists = spreadsheetInfo.data.sheets?.some(s => s.properties?.title === sheetName);
+
+    if (!sheetExists) {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: [{
+            addSheet: {
+              properties: { title: sheetName }
+            }
+          }]
+        }
+      });
+    }
+
+    // Append a separator for the new report
+    const reportDate = new Date().toLocaleString('en-US', { timeZone: 'UTC' });
+    await sheets.spreadsheets.values.append({
+        spreadsheetId,
+        range: `${sheetName}!A1`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+            values: [[`Report for ${reportDate}`], []], // Add a title and a blank row
+        },
+    });
+
+
+    // Append header and data
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: `${sheetName}!A1`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: [header, ...rows],
+      },
+    });
+
+    console.log(`Successfully sent ${data.length} records to Google Sheets.`);
+  } catch (error) {
+    console.error('Error sending data to Google Sheets:', error);
+    // We throw the error so the calling function can see it, but we don't block the API response.
+    throw error;
+  }
 }
 
 export async function GET() {
@@ -40,8 +100,7 @@ export async function POST(request: Request) {
 
     sensorReadings.push(newReading);
 
-    // This condition simulates the 24h cycle.
-    // When the number of readings exceeds the max, we trigger the report and reset the data.
+    // When the number of readings exceeds the max, trigger the report and reset.
     if (sensorReadings.length > MAX_READINGS) {
       const dataForReport = sensorReadings.slice(0, MAX_READINGS);
       
