@@ -3,42 +3,44 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-interface SensorReading {
+interface SensorPacket {
   deviceId: string;
   temperature: number;
   humidity: number;
   timestamp: string;
 }
 
-let readings: SensorReading[] = [];
+let latest: SensorPacket | null = null;
 
+// ====================== POST ==========================
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
     const { deviceId, temperature, humidity } = body;
 
     if (!deviceId || typeof temperature !== "number" || typeof humidity !== "number") {
-      return NextResponse.json({ error: true }, { status: 400 });
+      return NextResponse.json({ ok: false, msg: "Invalid payload" }, { status: 400 });
     }
 
-    const reading: SensorReading = {
+    latest = {
       deviceId,
-      temperature,
-      humidity,
+      temperature: Number(temperature.toFixed(1)),
+      humidity: Number(humidity.toFixed(1)),
       timestamp: new Date().toISOString(),
     };
 
-    readings.push(reading);
-
-    // BALASAN SUPER RINGAN BIAR ESP TIDAK CRASH
-    return NextResponse.json({ ok: true }, { status: 201 });
-
+    // BALIKAN SUPER RINGAN → ANTI CRASH ESP8266
+    return NextResponse.json({ ok: true });
   } catch {
-    return NextResponse.json({ error: true }, { status: 400 });
+    return NextResponse.json({ ok: false, msg: "Invalid JSON" }, { status: 400 });
   }
 }
 
+// ====================== GET ===========================
 export async function GET() {
-  return NextResponse.json({ readings });
+  if (!latest) {
+    return NextResponse.json({ ok: false, msg: "No data yet" });
+  }
+
+  return NextResponse.json(latest); // <-- web fetch ini untuk display
 }
