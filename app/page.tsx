@@ -16,7 +16,7 @@ export default function Home() {
 
     const fetchSensorData = async () => {
       try {
-        const response = await fetch('/api/sensor-data');
+        const response = await fetch('/api/sensor');
         if (response.ok) {
           const readings = await response.json();
           setDataCount(readings.length);
