@@ -3,6 +3,7 @@
 import Dashboard from '@/components/dashboard';
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import { Activity } from 'lucide-react';
 
 export default function Home() {
   const [startTime, setStartTime] = useState('');
@@ -35,8 +36,9 @@ export default function Home() {
     <main className="min-h-screen bg-background text-foreground p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <header>
-          <h1 className="text-3xl md:text-4xl font-headline font-bold text-foreground">
-            DHT11 Monitor
+          <h1 className="text-3xl md:text-4xl font-headline font-bold text-foreground flex items-center gap-3">
+            <Activity className="h-8 w-8 text-primary" />
+            <span>DHT11 Monitor</span>
           </h1>
           <p className="text-muted-foreground mt-2 max-w-2xl">
             ESP01 • Siklus Harian Otomatis
