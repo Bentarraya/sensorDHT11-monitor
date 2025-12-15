@@ -10,7 +10,6 @@ interface SensorReading {
   timestamp: string;
 }
 
-// In-memory (Vercel ephemeral, only for testing)
 let readings: SensorReading[] = [];
 
 export async function POST(req: Request) {
@@ -18,28 +17,28 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { deviceId, temperature, humidity } = body;
 
-    if (!deviceId)
-      return NextResponse.json({ error: "Missing deviceId" }, { status: 400 });
-    if (typeof temperature !== "number")
-      return NextResponse.json({ error: "Invalid temperature" }, { status: 400 });
-    if (typeof humidity !== "number")
-      return NextResponse.json({ error: "Invalid humidity" }, { status: 400 });
+    if (!deviceId) return NextResponse.json({ error: "Missing deviceId" }, { status: 400 });
+    if (typeof temperature !== "number") return NextResponse.json({ error: "Invalid temperature" }, { status: 400 });
+    if (typeof humidity !== "number") return NextResponse.json({ error: "Invalid humidity" }, { status: 400 });
 
-    const newReading: SensorReading = {
+    const reading: SensorReading = {
       deviceId,
       temperature: parseFloat(temperature.toFixed(1)),
       humidity: parseFloat(humidity.toFixed(1)),
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
 
-    readings.push(newReading);
+    readings.push(reading);
 
-    return NextResponse.json(
-      { success: true, reading: newReading },
-      { status: 201 }
-    );
-  } catch (err) {
+    return NextResponse.json({ success: true, reading }, { status: 201 });
+  } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+}
+
+export async function GET() {
+  return NextResponse.json({ readings });
+}lid JSON" }, { status: 400 });
   }
 }
 
