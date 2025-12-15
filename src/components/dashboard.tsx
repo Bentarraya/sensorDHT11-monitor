@@ -28,7 +28,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/sensor-data');
+        const response = await fetch('/api/sensor');
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
