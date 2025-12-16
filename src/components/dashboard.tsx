@@ -121,6 +121,17 @@ useEffect(() => {
           <DataChart data={data} />
         </CardContent>
       </Card>
+
+      <button
+  className="px-4 py-2 rounded bg-blue-500"
+  onClick={async () => {
+    await fetch("/api/report");
+    alert("Report sent!");
+  }}
+>
+  Generate Report
+</button>
+      
     </div>
   );
 }
