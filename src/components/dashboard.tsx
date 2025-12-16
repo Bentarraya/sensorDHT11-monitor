@@ -36,7 +36,15 @@ export default function Dashboard() {
         let readings: SensorReading[] = [];
 
         if (json.latest) {
-          readings = [json.latest];
+          setData(prev => {
+            const next = [...prev, json.latest];
+
+            // batasi history (misal 24 data = 1 hari per jam)
+            if (next.length > 24) next.shift();
+
+            return next;
+          });
+          setIsPrototyping(false);
         }
 
         if (readings.length === 0) {
