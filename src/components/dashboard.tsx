@@ -47,16 +47,6 @@ export default function Dashboard() {
           setIsPrototyping(false);
         }
 
-        if (readings.length === 0) {
-          if (data.length === 0) {
-            setData(generateInitialPrototypeData());
-            setIsPrototyping(true);
-          }
-        } else {
-          setData(readings);
-          setIsPrototyping(false);
-        }
-
       } catch (error) {
         console.error('Failed to fetch sensor data:', error);
         // Fallback to prototyping data on error if no data is present
