@@ -1,36 +1,60 @@
+// app/api/sensor/route.ts
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-let readings: any[] = []; // history sensor (aman buat dashboard)
+interface HourlyData {
+  temperature: number;
+  humidity: number;
+  timestamp: string;
+}
+
+let hourlyBuffer: HourlyData[] = [];
+let lastSeen: string | null = null;
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { deviceId, temperature, humidity } = body;
+    const { temperature, humidity } = await req.json();
 
-    if (!deviceId || typeof temperature !== "number" || typeof humidity !== "number") {
+    if (typeof temperature !== "number" || typeof humidity !== "number") {
       return NextResponse.json({ ok: false }, { status: 400 });
     }
 
-    const packet = {
-      deviceId,
+    const entry: HourlyData = {
       temperature,
       humidity,
       timestamp: new Date().toISOString(),
     };
 
-    readings.push(packet);
+    hourlyBuffer.push(entry);
+    lastSeen = entry.timestamp;
 
-    if (readings.length > 48) readings.shift(); // biar ga bengkak di memory
+    // maksimal 24 data (1 hari)
+    if (hourlyBuffer.length >= 24) {
+      // trigger auto report (fire and forget)
+      fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: entry.timestamp.slice(0, 10),
+          data: hourlyBuffer,
+        }),
+      }).catch(() => {});
 
-    return NextResponse.json({ ok: true }); // aman buat ESP
-  } catch (err) {
+      hourlyBuffer = [];
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 }
 
 export async function GET() {
-  return NextResponse.json(readings);
+  return NextResponse.json({
+    latest: hourlyBuffer.at(-1) ?? null,
+    lastSeen,
+    count: hourlyBuffer.length,
+  });
 }

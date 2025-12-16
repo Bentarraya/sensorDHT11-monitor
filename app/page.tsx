@@ -54,7 +54,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto space-y-8">
         <header>
           <h1 className="text-3xl md:text-4xl font-headline font-bold text-foreground flex items-center gap-3">
-            <Activity className="h-8 w-8 text-primary" />
+            <Activity className="h-3 w-8 text-primary" />
             <span>DHT11 Monitor</span>
           </h1>
 
