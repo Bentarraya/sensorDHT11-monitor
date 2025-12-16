@@ -14,4 +14,4 @@ export async function GET() {
 
   // reverse supaya chart dari data lama ke terbaru
   return NextResponse.json(data.reverse());
-}}
+}
