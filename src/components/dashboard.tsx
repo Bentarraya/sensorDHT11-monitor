@@ -55,52 +55,25 @@ export default function Dashboard() {
   };
 
   // ================== FETCH SENSOR ==================
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/api/sensor', { cache: 'no-store' });
-        if (!response.ok) throw new Error('Network error');
-
-        const json = await response.json();
-        if (!json?.latest) return;
-
-        setData(prev => {
-          // === FILTER 1 DATA PER JAM ===
-          if (prev.length > 0) {
-            const lastHour = new Date(prev[prev.length - 1].timestamp).getHours();
-            const currentHour = new Date(json.latest.timestamp).getHours();
-            if (lastHour === currentHour) {
-              return prev;
-            }
-          }
-
-          const next = [...prev, json.latest];
-
-          // === AUTO REPORT 24 JAM ===
-          if (next.length >= 24) {
-            triggerReport(next);
-            return [];
-          }
-
-          return next;
-        });
-
-        setIsPrototyping(false);
-
-      } catch (error) {
-        console.error('Failed to fetch sensor data:', error);
-        if (data.length === 0) {
-          setData(generateInitialPrototypeData());
-          setIsPrototyping(true);
-        }
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const r = await fetch("/api/sensor");
+      const json = await r.json();
+      setData(json);
+      setIsPrototyping(false);
+    } catch {
+      if (data.length === 0) {
+        setData(generateInitialPrototypeData());
+        setIsPrototyping(true);
       }
-    };
+    }
+  };
 
-    fetchData();
-    const interval = setInterval(fetchData, 60_000); // fetch tiap 1 menit
-    return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  fetchData();
+  const interval = setInterval(fetchData, 5000);
+  return () => clearInterval(interval);
+}, []);
 
   const currentReading =
     data[data.length - 1] || { temperature: 0, humidity: 0, timestamp: '' };
