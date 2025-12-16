@@ -29,21 +29,26 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const response = await fetch('/api/sensor');
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+        if (!response.ok) throw new Error('Network error');
+
+        const json = await response.json();
+
+        let readings: SensorReading[] = [];
+
+        if (json.latest) {
+          readings = [json.latest];
         }
-        const readings: SensorReading[] = await response.json();
-        
+
         if (readings.length === 0) {
-            // Only generate prototype data once if the component is just mounting
-            if (data.length === 0) { 
-                setData(generateInitialPrototypeData());
-                setIsPrototyping(true);
-            }
+          if (data.length === 0) {
+            setData(generateInitialPrototypeData());
+            setIsPrototyping(true);
+          }
         } else {
-            setData(readings);
-            if (isPrototyping) setIsPrototyping(false);
+          setData(readings);
+          setIsPrototyping(false);
         }
+
       } catch (error) {
         console.error('Failed to fetch sensor data:', error);
         // Fallback to prototyping data on error if no data is present
