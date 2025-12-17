@@ -129,8 +129,8 @@ export default function Dashboard() {
   }, []);
 
 
-  const currentReading =
-    data[data.length - 1] || { temperature: 0, humidity: 0, timestamp: '' };
+  const currentReading = latest ?? { temperature: 0, humidity: 0 };
+
 
 
   // ================== RENDER ==================
