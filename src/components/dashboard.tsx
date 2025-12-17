@@ -82,6 +82,25 @@ export default function Dashboard() {
     }
   };
 
+  const [latest, setLatest] = useState<SensorReading | null>(null);
+
+  useEffect(() => {
+  const fetchLatest = async () => {
+    try {
+      const res = await fetch("/api/sensor/latest");
+      const json = await res.json();
+      if (json) setLatest(json);
+    } catch (e) {
+      console.error("Failed to fetch latest sensor");
+    }
+  };
+
+  fetchLatest();
+  const i = setInterval(fetchLatest, 5000);
+  return () => clearInterval(i);
+}, []);
+
+
 
   // ================== FETCH STATUS ONLINE ==================
   const fetchStatus = async () => {
